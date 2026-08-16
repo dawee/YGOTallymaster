@@ -81,6 +81,8 @@ function onReset(fullReset = true) {
 		toggledStaple.value = false
 		toggledCoreType.value = null
 		setFilter.value = null
+		dateRangeStart.value = null
+		dateRangeEnd.value = null
 		resetSearch()
 	}
 
@@ -166,7 +168,13 @@ const linkvals = useToggleArray<number>('OR')
 const linkMarkers = useToggleArray<TLinkMarkers>('AND')
 
 const setFilter = ref<{collectionName: string; setName: string} | null>(null)
+const dateRangeStart = ref<string | null>(null)
+const dateRangeEnd = ref<string | null>(null)
 function onSetFilterChange() {
+	onSearch()
+}
+
+function onDateRangeChange() {
 	onSearch()
 }
 
@@ -253,6 +261,8 @@ function _applyActiveQuery() {
 	atkFilter.value = [activeQuery.value.atk?.lte ?? null, activeQuery.value.atk?.gte ?? null]
 	defFilter.value = [activeQuery.value.def?.lte ?? null, activeQuery.value.def?.gte ?? null]
 	setFilter.value = activeQuery.value.setFilter ?? null
+	dateRangeStart.value = activeQuery.value.dateRange?.startDate ?? null
+	dateRangeEnd.value = activeQuery.value.dateRange?.endDate ?? null
 }
 
 const query = computed<TSearchQuery>(() => ({
@@ -260,6 +270,10 @@ const query = computed<TSearchQuery>(() => ({
 	owned: toggledOwned.value,
 	staple: toggledStaple.value,
 	setFilter: setFilter.value ?? undefined,
+	dateRange:
+		dateRangeStart.value != null && dateRangeEnd.value != null
+			? {startDate: dateRangeStart.value ?? 0, endDate: dateRangeEnd.value ?? 0}
+			: undefined,
 	attributes: attributes.items.value,
 	coreCardType: toggledCoreType.value ?? undefined,
 	monsterRaces: monsterRaces.items.value.length > 0 ? monsterRaces.items.value : undefined,
@@ -403,6 +417,20 @@ const selectedSort = ref<ESortBy>(sortedBy.value ?? ESortBy.Name_Asc)
 				/>
 				<span class="w-15 font-bold text-sm">{{ type }}</span>
 			</ToggleButton>
+			<div>
+				<input
+					v-model="dateRangeStart"
+					@change="onDateRangeChange"
+					type="date"
+					class="bg-primary-700 text-contrast-700 rounded-md px-3 py-1.5 pr-8 text-sm border border-primary-500 focus:border-accent-500 focus:outline-none transition-colors appearance-none cursor-pointer"
+				/>
+				<input
+					v-model="dateRangeEnd"
+					@change="onDateRangeChange"
+					type="date"
+					class="bg-primary-700 text-contrast-700 rounded-md px-3 py-1.5 pr-8 text-sm border border-primary-500 focus:border-accent-500 focus:outline-none transition-colors appearance-none cursor-pointer"
+				/>
+			</div>
 		</FilterSection>
 
 		<!-- Monster Filters -->

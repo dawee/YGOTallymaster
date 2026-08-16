@@ -255,6 +255,7 @@ export type TSearchQuery = {
 	owned?: boolean
 	staple?: boolean
 	setFilter?: {collectionName: string; setName: string}
+	dateRange?: {startDate: string; endDate: string}
 }
 export type TCoreCardType = 'Monster' | 'Spell' | 'Trap'
 
@@ -303,6 +304,12 @@ function _applyQueryFilters(cardList: TCardData[] | TSearchResultCardData[], que
 	// Apply Set Filter (apply early to reduce the dataset)
 	if (query.setFilter) {
 		cOut = _searchBySet(cOut, query.setFilter)
+	}
+	console.log('_applyQueryFilters')
+
+	if (query.dateRange) {
+		console.log('has date range')
+		cOut = _searchInDateRange(cOut, query.dateRange)
 	}
 
 	// Apply Owned/Staple Filter
@@ -382,7 +389,8 @@ function _searchQueryIsEmpty(query: TSearchQuery) {
 		(query.linkvals && query.linkvals.length != 0) ||
 		(query.scales && query.scales.length != 0) ||
 		(query.atk && (query.atk.lte != undefined || query.atk.gte != undefined)) ||
-		(query.def && (query.def.lte != undefined || query.def.gte != undefined))
+		(query.def && (query.def.lte != undefined || query.def.gte != undefined)) ||
+		query.dateRange != null
 	)
 }
 
@@ -537,6 +545,19 @@ function _searchBySet(cardList: TCardData[], setFilter: {collectionName: string;
 	const setCardIds = getSetCardIds(setFilter.collectionName, setFilter.setName)
 	if (!setCardIds || setCardIds.size === 0) return []
 	return cardList.filter((card) => setCardIds.has(card.id))
+}
+
+function _searchInDateRange(
+	cardList: TCardData[],
+	setFilter: {startDate: string; endDate: string}
+) {
+	return cardList.filter((card) => {
+		let cardTime = Date.parse(card.misc_info[0].tcg_date)
+		let startTime = Date.parse(setFilter.startDate)
+		let endTime = Date.parse(setFilter.endDate)
+
+		return cardTime >= startTime && cardTime <= endTime
+	})
 }
 
 function __getAllViableValues<K extends keyof TCardData>(
